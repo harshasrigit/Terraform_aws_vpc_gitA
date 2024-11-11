@@ -4,34 +4,50 @@ run-name: ${{ github.actor }} has triggered the pipeline
 on:
   push:
     branches:
-      - 'main'
+      - 'main'  # Trigger on changes to the main branch
 
 env:
-  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}  # AWS Access Key from GitHub Secrets
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # AWS Secret Access Key from GitHub Secrets
+  AWS_REGION: 'us-east-1'  # AWS Region where you want to create resources (can be changed)
 
 jobs:
   build-infra:
     name: terraform-ci-cd
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+    
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3  # Checkout the repository code
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: "1.5.0"  # Set your required Terraform version
+
       - name: Terraform Init
         id: init
-        run: terraform init
-        working-directory: ./Terraform-VPC
+        run: terraform init  # Initialize Terraform (downloads providers, modules, etc.)
+        working-directory: ./Terraform-VPC  # Directory where your Terraform configuration is
+
       - name: Terraform Validate
         id: validate
-        run: terraform validate
-        working-directory: ./Terraform-VPC
+        run: terraform validate  # Validate the Terraform configuration
+        working-directory: ./Terraform-VPC  # Directory where your Terraform configuration is
+
       - name: Terraform Plan
         id: plan
-        run: terraform plan
-        working-directory: ./Terraform-VPC
+        run: terraform plan -out=tfplan  # Generate a plan to review what will be applied
+        working-directory: ./Terraform-VPC  # Directory where your Terraform configuration is
+
       - name: Terraform Apply
         id: apply
-        run: terraform destroy --auto-approve
-        working-directory: ./Terraform-VPC
+        run: terraform apply -auto-approve tfplan  # Apply the plan (deploy resources)
+        working-directory: ./Terraform-VPC  # Directory where your Terraform configuration is
