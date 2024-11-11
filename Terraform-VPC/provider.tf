@@ -8,7 +8,7 @@ terraform {
 
 
 backend "s3" {
-    bucket = "harshas3123"
+    bucket = "harshas31231"
     key    = "env:/terraform.tfstate"
     region = "eu-north-1"  # Ensure this matches the region of your S3 bucket
   }
