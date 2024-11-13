@@ -11,3 +11,13 @@ resource "aws_instance" "web" {
     Name = var.ec2_names[count.index]  # Set the instance name
   }
 }
+resource "aws_internet_gateway" "example" {
+  vpc_id = "vpc-0ed2d87f8632c1a8d"  # Use your VPC ID here
+}
+
+# Optional: Update your route table to allow public subnet to access the internet.
+resource "aws_route" "internet_access" {
+  route_table_id         = aws_route_table.public.id  # Route table for your public subnets
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.example.id
+}
